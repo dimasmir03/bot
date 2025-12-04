@@ -7,6 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY bot.py .
 
-RUN mkdir -p images
-
 CMD ["python", "-u", "bot.py"]
