@@ -1,7 +1,7 @@
 services:
   birthday-bot:
     container_name: birthday_bot
-    build: .
+    image: ghcr.io/bogdan2913/birthday-bot
     restart: unless-stopped
     volumes:
       - ./data:/app/data
