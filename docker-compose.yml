@@ -1,10 +1,7 @@
-version: '3.8'
 services:
   birthday-bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
     container_name: birthday_bot
+    image: ghcr.io/bogdan2913/birthday-bot
     restart: unless-stopped
     volumes:
       - ./data:/app/data
