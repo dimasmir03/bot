@@ -14,13 +14,13 @@ TOKEN = os.getenv("BOT_TOKEN")
 if not TOKEN:
     raise ValueError("BOT_TOKEN не найден в .env файле!")
 
-
 DB_NAME = "birthdays.db"
 
+Conn = sqlite3.Connect(DB_NAME)
+C = Conn.cursor()
+
 def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("""
+    C.execute("""
     CREATE TABLE IF NOT EXISTS birthdays (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
@@ -28,8 +28,7 @@ def init_db():
         date TEXT
     )
     """)
-    conn.commit()
-    conn.close()
+    Conn.commit()
 
 init_db()
 os.makedirs("images", exist_ok=True)
@@ -74,33 +73,21 @@ def get_random_image():
     return None
 
 def add_birthday(user_id, name, date):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("INSERT INTO birthdays (user_id, name, date) VALUES (?, ?, ?)", (user_id, name, date))
-    conn.commit()
-    conn.close()
+    C.execute("INSERT INTO birthdays (user_id, name, date) VALUES (?, ?, ?)", (user_id, name, date))
+    Conn.commit()
 
 def get_birthdays(user_id):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("SELECT id, name, date FROM birthdays WHERE user_id=?", (user_id,))
-    rows = c.fetchall()
-    conn.close()
+    C.execute("SELECT id, name, date FROM birthdays WHERE user_id=?", (user_id,))
+    rows = C.fetchall()
     return rows
 
 def delete_birthday(entry_id):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("DELETE FROM birthdays WHERE id=?", (entry_id,))
-    conn.commit()
-    conn.close()
+    C.execute("DELETE FROM birthdays WHERE id=?", (entry_id,))
+    Conn.commit()
 
 def update_birthday(entry_id, new_name, new_date):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("UPDATE birthdays SET name=?, date=? WHERE id=?", (new_name, new_date, entry_id))
-    conn.commit()
-    conn.close()
+    C.execute("UPDATE birthdays SET name=?, date=? WHERE id=?", (new_name, new_date, entry_id))
+    Conn.commit()
 
 user_state = {}
 
@@ -190,11 +177,8 @@ def handle_text(message):
 
     if user_id in user_state and user_state[user_id]["action"] == "send_congratulation":
         try:
-            conn = sqlite3.connect(DB_NAME)
-            c = conn.cursor()
-            c.execute("SELECT name FROM birthdays WHERE id=? AND user_id=?", (int(text), user_id))
-            result = c.fetchone()
-            conn.close()
+            C.execute("SELECT name FROM birthdays WHERE id=? AND user_id=?", (int(text), user_id))
+            result = C.fetchone()
             
             if result:
                 name = result[0]
@@ -266,13 +250,10 @@ def handle_text(message):
         return
 
 def check_today_birthdays():
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
     today = datetime.now().strftime("%d.%m")
     
-    c.execute("SELECT user_id, name, date FROM birthdays")
-    rows = c.fetchall()
-    conn.close()
+    C.execute("SELECT user_id, name, date FROM birthdays")
+    rows = C.fetchall()
 
     for user_id, name, full_date in rows:
         try:
